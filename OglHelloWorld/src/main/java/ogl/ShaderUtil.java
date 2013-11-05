@@ -1,14 +1,24 @@
-package com.jayway.gles20.material.shader;
+package ogl;
 
 import android.util.Log;
-import com.jayway.gles20.qualifier.GLQualifier;
-import com.jayway.gles20.qualifier.QualifierFactory;
-import com.jayway.gles20.util.GLESUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.opengl.GLES20.*;
+import static android.opengl.GLES20.GL_COMPILE_STATUS;
+import static android.opengl.GLES20.GL_FRAGMENT_SHADER;
+import static android.opengl.GLES20.GL_LINK_STATUS;
+import static android.opengl.GLES20.GL_TRUE;
+import static android.opengl.GLES20.GL_VERTEX_SHADER;
+import static android.opengl.GLES20.glAttachShader;
+import static android.opengl.GLES20.glCompileShader;
+import static android.opengl.GLES20.glCreateProgram;
+import static android.opengl.GLES20.glCreateShader;
+import static android.opengl.GLES20.glDeleteProgram;
+import static android.opengl.GLES20.glDeleteShader;
+import static android.opengl.GLES20.glGetProgramInfoLog;
+import static android.opengl.GLES20.glGetProgramiv;
+import static android.opengl.GLES20.glGetShaderInfoLog;
+import static android.opengl.GLES20.glGetShaderiv;
+import static android.opengl.GLES20.glLinkProgram;
+import static android.opengl.GLES20.glShaderSource;
 
 public class ShaderUtil {
 	private static final String TAG = "ShaderUtil";
@@ -53,9 +63,9 @@ public class ShaderUtil {
 		int program = glCreateProgram();
 		if (program != PROGRAM_COMPILED_WITH_ERROR) {
 			glAttachShader(program, vertexShader);
-			GLESUtil.checkGlError("glAttachShader");
+//			GLESUtil.checkGlError("glAttachShader");
 			glAttachShader(program, pixelShader);
-			GLESUtil.checkGlError("glAttachShader");
+//			GLESUtil.checkGlError("glAttachShader");
 			glLinkProgram(program);
 			int[] linkStatus = new int[1];
 			glGetProgramiv(program, GL_LINK_STATUS, linkStatus, 0);
@@ -99,66 +109,5 @@ public class ShaderUtil {
                 return "Vertex Shader";
         }
         return "Shader type not recognized";
-    }
-
-    public static List<GLQualifier> getAllQualifiers(int program) {
-        int[][] qualifierTypes = {
-            {GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH},
-            {GL_ACTIVE_UNIFORMS,   GL_ACTIVE_UNIFORM_MAX_LENGTH}
-        };
-
-        ArrayList<GLQualifier> allQualifiers = new ArrayList<GLQualifier>(20);
-
-        int[] nQualifiers                 = new int[1];
-        int[] maxQualifierLengthContainer = new int[1];
-
-
-        for(int[] qt : qualifierTypes){
-            int typeId      = qt[0];
-            int maxLengthId = qt[1];
-
-            //Get qualifier information
-            glGetProgramiv(program, typeId, nQualifiers, 0);
-            glGetProgramiv(program, maxLengthId, maxQualifierLengthContainer, 0);
-
-            for (int i = 0; i < nQualifiers[0]; ++i) {
-                GLQualifier qualifier = createQualifier(program, typeId, i, maxQualifierLengthContainer[0]);
-                allQualifiers.add(qualifier);
-            }
-        }
-
-        return allQualifiers;
-    }
-
-    /**
-     * Creates a gl qualifier from the provided data.
-     * //TODO Push to QualifierFactory?
-     *
-     * @param program OpenGL shader program id
-     * @param glQualifierType type of gl qualifier e.g. {@link android.opengl.GLES20#GL_ACTIVE_ATTRIBUTES}, {@link android.opengl.GLES20#GL_ACTIVE_UNIFORMS}
-     * @param qualifierId The by OpenGL generated qualifier id, i.e location id.
-     * @param maxQualifierLength Max length of the qualifier with longest name.
-     * @return Created Qualifier
-     */
-    private static GLQualifier createQualifier(final int program, final int glQualifierType, final int qualifierId, final int maxQualifierLength) {
-        byte[] NAME_CONTAINER  = new byte[maxQualifierLength];
-        int[] LENGTH_CONTAINER = new int[1];
-        int[] SIZE_CONTAINER   = new int[1];
-        int[] TYPE_CONTAINER   = new int[1];
-
-        switch (glQualifierType){
-            case GL_ACTIVE_UNIFORMS:
-                glGetActiveUniform(program, qualifierId, maxQualifierLength, LENGTH_CONTAINER, 0, SIZE_CONTAINER, 0, TYPE_CONTAINER, 0, NAME_CONTAINER, 0);
-                break;
-            case GL_ACTIVE_ATTRIBUTES:
-                glGetActiveAttrib(program, qualifierId, maxQualifierLength, LENGTH_CONTAINER, 0, SIZE_CONTAINER, 0, TYPE_CONTAINER, 0, NAME_CONTAINER, 0);
-                break;
-        }
-
-        return QualifierFactory.createGLQualifier(program,
-            new String(NAME_CONTAINER, 0, LENGTH_CONTAINER[0]), //Name
-            glQualifierType,
-            TYPE_CONTAINER[0] //glVariableType
-        );
     }
 }

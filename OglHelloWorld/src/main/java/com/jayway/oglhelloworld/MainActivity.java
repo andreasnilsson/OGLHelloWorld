@@ -60,6 +60,7 @@ public class MainActivity extends ActionBarActivity
     }
 
     public void onSectionAttached(int number) {
+        // TODO
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
@@ -107,7 +108,7 @@ public class MainActivity extends ActionBarActivity
     }
 
     /**
-     * A placeholder fragment containing a simple view.
+     * A placeholder fragment containing a simple_fs view.
      */
     public static class PlaceholderFragment extends Fragment {
         /**
