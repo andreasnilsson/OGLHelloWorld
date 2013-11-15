@@ -1,4 +1,4 @@
-package ui;
+package com.jayway.oglhelloworld.fragment;
 
 import android.app.ActivityManager;
 import android.app.Fragment;
@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 
 import com.jayway.oglhelloworld.R;
 
-import ogl.GLES20Renderer;
+import com.jayway.oglhelloworld.ogl.GLES20Renderer;
 
 public class OGLFragment extends Fragment{
 
@@ -62,7 +62,7 @@ public class OGLFragment extends Fragment{
         glSurfaceView.setRenderer(new GLES20Renderer(getActivity()));
 
         // Set rendering to 60 FPS
-        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         // Making sure that when the application pauses the context won't be recreated
         glSurfaceView.getPreserveEGLContextOnPause();

@@ -1,9 +1,11 @@
-package ogl;
+package com.jayway.oglhelloworld.ogl;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
+
+import com.jayway.oglhelloworld.R;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -87,18 +89,17 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     // Vertex objects
     private GLObject mTriangle;
 
-
     private final String mVertexShader =
-            "attribute vec4 aPosition;\n" +
-                    "void main() {\n" +
-                    "  gl_Position = aPosition;\n" +
-                    "}\n";
+                      "attribute vec4 aPosition;"
+                    + "void main() {"
+                    + "  gl_Position = aPosition;"
+                    + "}";
 
     private final String mFragmentShader =
-            "precision mediump float;\n" +
-                    "void main() {\n" +
-                    "  gl_FragColor = vec4(1.0);\n" +
-                    "}\n";
+                     "precision mediump float;"
+                    +"void main() {"
+                    +"  gl_FragColor = vec4(1.0);"
+                    +"}";
 
 
     public GLES20Renderer(Context context) {
@@ -118,7 +119,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         String vertexShaderSrc = null;
         try {
             Log.i(TAG, "Fragment source: Start loading...");
-            fragmentShaderSrc = loadShaderSourceFromRaw(android.R.raw.simple_fs);
+            fragmentShaderSrc = loadShaderSourceFromRaw(R.raw.simple_fs);
             Log.i(TAG, "Fragment source: Done!");
 
             Log.i(TAG, "Vertex source: Start loading...");
@@ -153,13 +154,13 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
 
         String test = "tomte";
 
-//        switch (test) {
-//            case "tomte:":
-//                break;
-//
-//        }
-    }
+        switch (test) {
+            case "tomte:":
+                break;
 
+        }
+    }
+//
     private String loadShaderSourceFromRaw(int id) throws IOException {
         final InputStream is = mContext.getResources().openRawResource(id);
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
