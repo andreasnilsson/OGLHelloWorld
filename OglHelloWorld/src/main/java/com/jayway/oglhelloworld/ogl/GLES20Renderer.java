@@ -5,8 +5,6 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
-import com.jayway.oglhelloworld.R;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +40,10 @@ import static android.opengl.GLES20.glGetProgramInfoLog;
 import static android.opengl.GLES20.glGetProgramiv;
 import static android.opengl.GLES20.glGetShaderInfoLog;
 import static android.opengl.GLES20.glGetShaderiv;
+import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glLinkProgram;
 import static android.opengl.GLES20.glShaderSource;
+import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
@@ -83,16 +83,17 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     private static final String A_POSITION = "aPosition";
 
     // Shader Handles
-    private int mLocationMVPMatrix;
+    private int mHandleMatrixMVP;
     private int mPositionHandle;
 
     // Vertex objects
     private GLObject mTriangle;
 
     private final String mVertexShader =
-                      "attribute vec4 aPosition;"
+                      "attribute vec4 " + A_POSITION + ";"
+                    + "uniform mat4 "   + U_MVP_MATRIX + ";"
                     + "void main() {"
-                    + "  gl_Position = aPosition;"
+                    + "  gl_Position = " + U_MVP_MATRIX + "*aPosition;"
                     + "}";
 
     private final String mFragmentShader =
@@ -114,103 +115,60 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         // Initiate objects
         mTriangle = createSimpleTexturedQuad();
 
-        // Compile and link shader program
-        String fragmentShaderSrc = null;
-        String vertexShaderSrc = null;
-        try {
-            Log.i(TAG, "Fragment source: Start loading...");
-            fragmentShaderSrc = loadShaderSourceFromRaw(R.raw.simple_fs);
-            Log.i(TAG, "Fragment source: Done!");
-
-            Log.i(TAG, "Vertex source: Start loading...");
-            vertexShaderSrc = loadShaderSourceFromRaw(R.raw.simple_vs);
-            Log.i(TAG, "Vertex source: Done");
-        } catch (IOException e) {
-            Log.e(TAG, "Failed reading reading shader resource", e);
-        }
-
-//        if (vertexShaderSrc != null && fragmentShaderSrc != null) {
-        mShaderProgram = createProgram(vertexShaderSrc, fragmentShaderSrc);
+//        // Compile and link shader program
+//        String fragmentShaderSrc = null;
+//        String vertexShaderSrc = null;
+//        try {
+//            Log.i(TAG, "Fragment source: Start loading...");
+//            fragmentShaderSrc = loadShaderSourceFromRaw(R.raw.simple_fs);
+//            Log.i(TAG, "Fragment source: Done!");
 //
+//            Log.i(TAG, "Vertex source: Start loading...");
+//            vertexShaderSrc = loadShaderSourceFromRaw(R.raw.simple_vs);
+//            Log.i(TAG, "Vertex source: Done");
+//        } catch (IOException e) {
+//            Log.e(TAG, "Failed reading reading shader resource", e);
 //        }
-
+//
+////        mShaderProgram = createProgram(vertexShaderSrc, fragmentShaderSrc);
         mShaderProgram = createProgram(mVertexShader, mFragmentShader);
 
         // Setup uniform and attributes
         if (mShaderProgram != PROGRAM_COMPILED_WITH_ERROR) {
             glUseProgram(mShaderProgram);
             // bind Uniforms and Attributes
-//            mLocationMVPMatrix = glGetUniformLocation(mShaderProgram, U_MVP_MATRIX);
+            mHandleMatrixMVP = glGetUniformLocation(mShaderProgram, U_MVP_MATRIX);
 
-//            if (mLocationMVPMatrix == -1) {
-//                Log.w(TAG, "Failed binding: " + U_MVP_MATRIX);
-//            }
+            if (mHandleMatrixMVP == -1) {
+                Log.w(TAG, "Failed binding: " + U_MVP_MATRIX);
+            }
 
-//            mPositionHandle = glGetAttribLocation(mShaderProgram, A_POSITION);
-//            if (mPositionHandle == -1) {
-//                Log.w(TAG, "Failed binding: " + A_POSITION);
-//            }
+            mPositionHandle = glGetAttribLocation(mShaderProgram, A_POSITION);
+            if (mPositionHandle == -1) {
+                Log.w(TAG, "Failed binding: " + A_POSITION);
+            }
         }
 
-        String test = "tomte";
-
-        switch (test) {
-            case "tomte:":
-                break;
-
-        }
+        // Setup view matrix
+        Matrix.setLookAtM(mMatrixView, 0,
+                eye[0], eye[1], eye[2],
+                center[0], center[1], center[2],
+                up[0], up[1], up[2]);
     }
 //
-    private String loadShaderSourceFromRaw(int id) throws IOException {
-        final InputStream is = mContext.getResources().openRawResource(id);
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
 
-        String readLine;
-        while ((readLine = br.readLine()) != null) {
-            sb.append(readLine);
-        }
-
-        return sb.toString();
-    }
 
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
-        Matrix.setIdentityM(mMatrixModel, 0);
+        final float aspect = (float) width / height;
         Matrix.setIdentityM(mMatrixProjection, 0);
         Matrix.setIdentityM(mMatrixView, 0);
 
         glViewport(0, 0, width, height);
 
-//        mHeight = height;
-//        mWidth = width;
-//
-//        float aspect = (float) width / height;
-
 
 //        // Setup projection
-//        Matrix.setIdentityM(mMatrixProjection, 0);
-//        Matrix.perspectiveM(mMatrixProjection, 0, FOV, aspect, 0.1f, 10f);
-//
-//        // Setup view matrix
-//        Matrix.setLookAtM(mMatrixView, 0,
-//                eye[0], eye[1], eye[2],
-//                center[0], center[1], center[2],
-//                up[0], up[1], up[2]);
-
-//
-//        glViewport(0, 0, width, height);
-        //Setup OpenGL viewport
-
-
-        // Projection using projection matrix, requires later API level.
-//        Matrix.perspectiveM(projMatrix, 0, 45f, aspect, 0.1f, 100f);
-
-        // Projection using frustum matrix
-//        Matrix.frustumM(mMatrixProjection, 0, -aspect, aspect, -1, 1, 3, 7);
-//        Matrix.setLookAtM(mMatrixView, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-//        Matrix.perspectiveM(mMatrixProjection, 0, 45f, aspect, 0.1f, 100f);
+        Matrix.perspectiveM(mMatrixProjection, 0, FOV, aspect, 0.1f, 10f);
     }
 
     @Override
@@ -220,25 +178,21 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
 //        // MVP matrix computation
 //        // P*(V*M) ===============================================================================================================
 //
-//        Matrix.setIdentityM(mMatrixMVP, 0);
+        Matrix.setIdentityM(mMatrixMVP, 0);
 //
 //        // Compute ModelView Matrix
-//        Matrix.multiplyMM(mMatrixMVP, 0, mMatrixView, 0, mMatrixModel, 0);
+        Matrix.multiplyMM(mMatrixMVP, 0, mMatrixView, 0, mMatrixModel, 0);
 //
 //        // Compute ModelViewProjection Matrix
-//        Matrix.multiplyMM(mMatrixMVP, 0, mMatrixProjection, 0, mMatrixMVP, 0);
+        Matrix.multiplyMM(mMatrixMVP, 0, mMatrixProjection, 0, mMatrixMVP, 0);
 
         // ========================================================================================================================
 
         // Bind shader program
         glUseProgram(mShaderProgram);
 
-
         // Set Uniform data
-//        glUniformMatrix4fv(mLocationMVPMatrix, 1, false, mMatrixMVP, 0);
-//        GLESUtil.checkGlError("glUniformMatrix4fv");
-
-        mPositionHandle = glGetAttribLocation(mShaderProgram, "aPosition");
+        glUniformMatrix4fv(mHandleMatrixMVP, 1, false, mMatrixMVP, 0);
 
         glEnableVertexAttribArray(mPositionHandle);
 
@@ -394,5 +348,18 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         buffer.put(vertices).position(0);
 
         return buffer;
+    }
+
+    private String loadShaderSourceFromRaw(int id) throws IOException {
+        final InputStream is = mContext.getResources().openRawResource(id);
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String readLine;
+        while ((readLine = br.readLine()) != null) {
+            sb.append(readLine);
+        }
+
+        return sb.toString();
     }
 }
