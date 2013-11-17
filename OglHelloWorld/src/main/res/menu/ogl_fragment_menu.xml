@@ -9,4 +9,9 @@
         android:id="@+id/action_toggle_animation"
         app:showAsAction="ifRoom|withText"
         android:title="Animation: Off"/>
+
+    <item
+        android:id="@+id/action_next_object"
+        app:showAsAction="ifRoom|withText"
+        android:title="Next Object"/>
 </menu>

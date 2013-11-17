@@ -1,4 +1,4 @@
-package com.jayway.oglhelloworld.ogl;
+package com.jayway.oglhelloworld.util;
 
 import android.util.Log;
 

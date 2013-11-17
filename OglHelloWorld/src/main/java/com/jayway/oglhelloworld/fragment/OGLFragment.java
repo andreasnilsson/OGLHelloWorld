@@ -23,6 +23,7 @@ public class OGLFragment extends Fragment {
     private GLSurfaceView mGLSurfaceView;
     private GLES20Renderer mRenderer;
     private boolean mIsAnimating = false;
+    private MenuItem mToggleAnimationMenuItem;
 
     public static OGLFragment newInstance() {
         return new OGLFragment();
@@ -72,6 +73,8 @@ public class OGLFragment extends Fragment {
     public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
         inflater.inflate(R.menu.ogl_fragment_menu, menu);
 
+        mToggleAnimationMenuItem = menu.findItem(R.id.action_toggle_animation);
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -79,26 +82,25 @@ public class OGLFragment extends Fragment {
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_toggle_animation:
-                toggleAnimation();
-                item.setTitle("Animation: " + (mIsAnimating ? "On" : "Off"));
+                setAnimating(!mIsAnimating);
                 return true;
-
+            case R.id.action_next_object:
+                setAnimating(false);
+                mRenderer.nextGLObject();
+                mGLSurfaceView.requestRender();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void toggleAnimation() {
+    private void setAnimating(final boolean isAnimating) {
+        mIsAnimating = isAnimating;
         final int animationDelayInMilliseconds = 16;
         final float animationDelayInSeconds = 0.016f;
-        mIsAnimating = !mIsAnimating;
 
-
-
-        final GLES20Renderer.GLObject glObject = mRenderer.getGlObject();
+        final GLES20Renderer.GLObject glObject = mRenderer.getSelectedGlObject();
         mGLSurfaceView.postDelayed(new Runnable() {
-            float angle = 0;
-
             @Override
             public void run() {
                 if (mIsAnimating) {
@@ -108,5 +110,9 @@ public class OGLFragment extends Fragment {
                 }
             }
         }, animationDelayInMilliseconds);
+
+        if (mToggleAnimationMenuItem != null) {
+            mToggleAnimationMenuItem.setTitle("Animation: " + (mIsAnimating ? "On" : "Off"));
+        }
     }
 }
