@@ -65,8 +65,17 @@ import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
 
-public class GLES20Renderer implements GLSurfaceView.Renderer {
-    private static final Log LOG = new Log(GLES20Renderer.class);
+/**
+ * Only renders a quad with a color
+ */
+
+public class SimpleRenderer implements GLSurfaceView.Renderer {
+    private static final String TAG = SimpleRenderer.class.getSimpleName();
+    /**
+     * In bytes
+     */
+    private static final int SIZE_OF_FLOAT = 4;
+    private static final Log LOG = new Log(SimpleRenderer.class);
 
     private final Context mContext;
 
@@ -128,7 +137,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
                     + "  gl_FragColor = texture2D(" + U_TEXURE01 + ", vec2(uv.x, 1.0-uv.y));"
                     + "}";
 
-    public GLES20Renderer(Context context) {
+    public SimpleRenderer(Context context) {
         mContext = context;
 
         Matrix.setIdentityM(mProjectionMatrix, 0);
@@ -341,6 +350,19 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
                 -0.5f, -0.311004243f, 0.0f,   // bottom left
                 0.5f, -0.311004243f, 0.0f    // bottom right
         };
+
+        // For simplifying the reading of the defined quadVertices array
+        final int X = 0;
+        final int Y = 1;
+        final int Z = 2;
+        final int U = 3;
+        final int V = 4;
+
+        final int coordinatePerVertex = 3;
+
+        final int vertexDataStride = coordinatePerVertex * 4;   // I.e. there are 5 floats between each defined point.
+        final int positionOffset = 0;     // The offset for each vertex where the position attributes start.
+        final int texCoordOffset = 0; // The offset for texture coordinate.
 
         return new GLObject(new AbstractVertexType.VertexType(), triangleCoords);
     }
