@@ -1,4 +1,4 @@
-package com.jayway.oglhelloworld.ogl;
+package com.jayway.oglhelloworld.renderer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -8,6 +8,8 @@ import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
 import com.jayway.oglhelloworld.R;
+import com.jayway.oglhelloworld.ogl.GLObjectFactory;
+import com.jayway.oglhelloworld.ogl.VertexType;
 import com.jayway.oglhelloworld.util.Log;
 
 import java.io.BufferedReader;
@@ -67,6 +69,7 @@ import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glLinkProgram;
 import static android.opengl.GLES20.glShaderSource;
 import static android.opengl.GLES20.glTexParameterf;
+import static android.opengl.GLES20.glUniform3fv;
 import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
@@ -78,7 +81,9 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     private final Context mContext;
 
     // Constants
-    public static final float[] CLEAR_COLOR = {0.2f, 0.2f, 0.2f, 1f};
+    public static final float[] CLEAR_COLOR = {0.5f, 0.5f, 0.5f, 1f};
+    public final boolean USE_TEXTURE_COORDINATES = true;
+    public final boolean USE_NORMALS = true;
 
     // Camera/View related
     private static final float NEAR_PLANE = .1f;
@@ -103,60 +108,43 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     // Shader Handles
     private int mMVPMatrixHandle;
     private int mPositionHandle;
-    private int mTextureCoordinateHandle;
-    private int mTextureHandle;
+    private int mUVHandle;
+    private int mNormalHandle;
+    private int mCameraHandle;
+
+    // Texture id's
+    private int mTextureId;
 
     // 3D Objects
-    private List<GLObject> mGlObjectList = new ArrayList<GLObject>();
+    private List<GLObject> mGlObjectList = new ArrayList<>();
     private int mSelectedGLObject = 0;
 
     // Shader source uniform and attribute variable names
     private static final String U_MVP_MATRIX = "uMVPMatrix";
     private static final String U_TEXTURE_01 = "uTexture01";
+    private static final String U_CAMERA = "uCamera";
 
     private static final String A_POSITION = "aPosition";
-    private static final String A_TEXTURE_COORDINATE = "aTexCoordinate"; // also known as UV-coordinate
+    private static final String A_TEXTURE_COORDINATE = "aUV"; // also known as UV-coordinate
+    private static final String A_NORMAL = "aNormal";
 
     private final String mVertexShader =
-                      "attribute vec4 " + A_POSITION + ";"
+                      "attribute vec3 " + A_POSITION + ";"
                     + "attribute vec2 " + A_TEXTURE_COORDINATE + ";"
                     + "uniform mat4 " + U_MVP_MATRIX + ";"
                     + "varying vec2 uv;"
                     + "void main() {"
                     + "  uv = " + A_TEXTURE_COORDINATE + ";"
-                    + "  gl_Position = " + U_MVP_MATRIX + "*" + A_POSITION + ";"
+                    + "  gl_Position = " + U_MVP_MATRIX + "* vec4(" + A_POSITION + ",1.0);"
                     + "}";
 
     private final String mFragmentShader =
                       "precision mediump float;"
-                    + "varying vec2 uv;"
                     + "uniform sampler2D " + U_TEXTURE_01 + ";"
+                    + "varying vec2 uv;"
                     + "void main() {"
                     + "  gl_FragColor = texture2D(" + U_TEXTURE_01 + ", vec2(uv.x, 1.0-uv.y));"
                     + "}";
-
-
-    private final String mAdvancedVertexShader =
-            "attribute vec4 " + A_POSITION + ";"
-                    + "attribute vec2 " + A_TEXTURE_COORDINATE + ";"
-                    + "uniform mat4 " + U_MVP_MATRIX + ";"
-                    + "varying vec2 uv;"
-                    + "void main() {"
-                    + "  uv = " + A_TEXTURE_COORDINATE + ";"
-                    + "  gl_Position = " + U_MVP_MATRIX + "*" + A_POSITION + ";"
-                    + "}";
-
-    private final String mAdvancedFragmentShader =
-            "precision mediump float;"
-                    + "varying vec2 uv;"
-                    + "uniform sampler2D " + U_TEXTURE_01 + ";"
-                    + "void main() {"
-                    + "  gl_FragColor = texture2D(" + U_TEXTURE_01 + ", vec2(uv.x, 1.0-uv.y));"
-                    + "}";
-
-
-
-
     public GLES20Renderer(Context context) {
         mContext = context;
 
@@ -166,58 +154,89 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
-        final boolean useTextureCoordinates = true;
-
         // Setup OpenGL
         glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
         glEnable(GL_DEPTH_TEST);
         glCullFace(GL_BACK);
 
         // Initiate objects
-        createGLObjects(useTextureCoordinates);
+        createGLObjects(USE_TEXTURE_COORDINATES, USE_NORMALS);
 
-        mShaderProgram = createProgram(mVertexShader, mFragmentShader);
+        if (USE_NORMALS) {
+            try {
+                final String vs = loadShaderSourceFromRaw(R.raw.advanced_vs);
+                final String fs = loadShaderSourceFromRaw(R.raw.advanved_fs);
 
-        bindUniformsAndAttributes(mShaderProgram, useTextureCoordinates);
+                mShaderProgram = createProgram(vs, fs);
+            } catch (IOException e) {
+                LOG.e("Failed loading shaders form raw", e);
 
-        mTextureHandle = loadTexture(R.drawable.jayway);
+            }
+        } else {
+            mShaderProgram = createProgram(mVertexShader, mFragmentShader);
+        }
 
-        // Setup view matrix
-        Matrix.setLookAtM(mViewMatrix, 0,
-                eye[0], eye[1], eye[2],
-                center[0], center[1], center[2],
-                up[0], up[1], up[2]);
+        if (mShaderProgram != PROGRAM_COMPILED_WITH_ERROR) {
+            bindUniformsAndAttributes(mShaderProgram, USE_TEXTURE_COORDINATES, USE_NORMALS);
+
+            mTextureId = loadTexture(R.drawable.jayway);
+
+            // Setup view matrix
+            Matrix.setLookAtM(mViewMatrix, 0,
+                    eye[0], eye[1], eye[2],
+                    center[0], center[1], center[2],
+                    up[0], up[1], up[2]);
+
+        } else {
+            LOG.w("Shader failed compiling");
+        }
     }
 
-    private void bindUniformsAndAttributes(int program, final boolean useTextureCoordinates) {
+    private void bindUniformsAndAttributes(int program, final boolean useTextures, final boolean useNormals) {
         // Setup uniform and attributes
         if (program != PROGRAM_COMPILED_WITH_ERROR) {
             glUseProgram(program);
-            // bind Uniforms and Attributes
-            mMVPMatrixHandle = glGetUniformLocation(program, U_MVP_MATRIX);
 
+            // Bind uniform handles
+            mMVPMatrixHandle = glGetUniformLocation(program, U_MVP_MATRIX);
             if (mMVPMatrixHandle == -1) {
                 LOG.w("Failed binding: " + U_MVP_MATRIX);
             }
 
+            mCameraHandle = glGetUniformLocation(program, U_CAMERA);
+            if (mPositionHandle == -1) {
+                LOG.w("Failed binding: " + A_POSITION);
+            }
+
+
+            // Bind attribute handles
             mPositionHandle = glGetAttribLocation(program, A_POSITION);
             if (mPositionHandle == -1) {
                 LOG.w("Failed binding: " + A_POSITION);
             }
 
-            if (useTextureCoordinates) {
-                mTextureCoordinateHandle = glGetAttribLocation(program, A_TEXTURE_COORDINATE);
-                if (mTextureCoordinateHandle == -1) {
+            if (useTextures) {
+                mUVHandle = glGetAttribLocation(program, A_TEXTURE_COORDINATE);
+                if (mUVHandle == -1) {
                     LOG.w("Failed binding: " + A_TEXTURE_COORDINATE);
+                }
+            }
+
+            if (useNormals) {
+                mNormalHandle = glGetAttribLocation(program, A_NORMAL);
+                if (mNormalHandle == -1) {
+                    LOG.w("Failed binding: " + A_NORMAL);
                 }
             }
         }
     }
 
-    private void createGLObjects(final boolean useTextureCoordinates) {
-        mGlObjectList.add(createSimpleTriangle(useTextureCoordinates));
-        mGlObjectList.add(createSimpleQuad(useTextureCoordinates));
-        mGlObjectList.add(GLObjectFactory.createCube(1,1,1));
+    private void createGLObjects(boolean useUVs, boolean useNormals) {
+        mGlObjectList.add(GLObjectFactory.createSimpleTriangle(useUVs, useNormals));
+        mGlObjectList.add(GLObjectFactory.createSimpleQuad(useUVs, useNormals));
+        mGlObjectList.add(GLObjectFactory.createCube(1, 1, 1, useUVs, useNormals));
+        mGlObjectList.add(GLObjectFactory.createCubeWithFlatNormals(1, 1, 1, useUVs, useNormals));
+        mGlObjectList.add(GLObjectFactory.createTorus(0.7f, 0.4f, 40, 40, useUVs, useNormals));
         // More objects can be added here
     }
 
@@ -284,37 +303,52 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         // Bind shader program
         glUseProgram(mShaderProgram);
 
-        // activete texture unit
+        // Bind camera to shader
+        glUniform3fv(mCameraHandle, 1, eye, 0);
+
+        // activate texture unit
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mTextureHandle);
+        glBindTexture(GL_TEXTURE_2D, mTextureId);
 
         // Set Uniform data
         glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         // Bind position coordinates, e.g. x,y and z.
-        glObject.vertexBuffer.position(glObject.positionOffset);
+        glObject.vBuffer.position(glObject.vPosOffset);
         glEnableVertexAttribArray(mPositionHandle);
         glVertexAttribPointer(mPositionHandle,
-                glObject.vertexPositionDimension,
+                glObject.vPosDimension,
                 GL_FLOAT,
                 false,
-                glObject.vertexDataStride,
-                glObject.vertexBuffer);
+                glObject.vDataStride,
+                glObject.vBuffer);
 
         if(glObject.hasTextureCoordinates()) {
             // Bind texture coordinates, e.g. u and v.
-            glObject.vertexBuffer.position(glObject.uvOffset);
-            glEnableVertexAttribArray(mTextureCoordinateHandle);
-            glVertexAttribPointer(mTextureCoordinateHandle,
-                    glObject.vertexTexturedCoordinateDimension,
+            glObject.vBuffer.position(glObject.vUVOffset);
+            glEnableVertexAttribArray(mUVHandle);
+            glVertexAttribPointer(mUVHandle,
+                    glObject.vUVDimension,
                     GL_FLOAT,
                     false,
-                    glObject.vertexDataStride,
-                    glObject.vertexBuffer);
+                    glObject.vDataStride,
+                    glObject.vBuffer);
+        }
+
+        if (glObject.hasNormals()) {
+            // Bind texture coordinates, e.g. u and v.
+            glObject.vBuffer.position(glObject.vNormOffset);
+            glEnableVertexAttribArray(mNormalHandle);
+            glVertexAttribPointer(mNormalHandle,
+                    glObject.vNormaDimension,
+                    GL_FLOAT,
+                    false,
+                    glObject.vDataStride,
+                    glObject.vBuffer);
         }
 
         // Draw vertices
-        glDrawArrays(GL_TRIANGLES, 0, glObject.nVertices);
+        glDrawArrays(glObject.glRenderMode, 0, glObject.vCount);
     }
 
     // Shader related
@@ -378,84 +412,16 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
 
     // Model related
 
-    protected GLObject createSimpleTriangle(final boolean useTextureCoordinates) {
-
-        final float triangleCoordsNoUVs[] = {      // in counterclockwise order:
-                0.0f, 0.622008459f, 0.0f,   // top
-                -0.5f, -0.311004243f, 0.0f,   // bottom left
-                0.5f, -0.311004243f, 0.0f    // bottom right
-        };
-
-        final float triangleCoordsWithUVs[] = {      // in counterclockwise order:
-                 0.0f,  0.622008459f, 0.0f, .5f, 0,   // top
-                -0.5f, -0.311004243f, 0.0f, 0, 1,   // bottom left
-                 0.5f, -0.311004243f, 0.0f, 1, 1    // bottom right
-        };
-
-        final float[] triangleCoords = useTextureCoordinates
-                ? triangleCoordsWithUVs
-                : triangleCoordsNoUVs;
-
-        final AbstractVertexType vertexType = useTextureCoordinates
-                ? new AbstractVertexType.TexturedVertexType()
-                : new AbstractVertexType.VertexType();
-
-        return new GLObject(vertexType, triangleCoords);
-    }
-
-    protected GLObject createSimpleQuad(boolean useTexCoords) {
-        // For simplifying the reading of the defined quadVertices array
-        final int x = 0;
-        final int y = 1;
-        final int z = 2;
-        final int u = 3;
-        final int v = 4;
-
-        // The four vectors of the quad
-        final float v0[] = {-.5f, -.5f, 0, 0, 0};
-        final float v1[] = { .5f, -.5f, 0, 1, 0};
-        final float v2[] = { .5f,  .5f, 0, 1, 1};
-        final float v3[] = {-.5f,  .5f, 0, 0, 1};
-
-        float[] verticesNoUVs = {
-                //First triangle
-                v0[x], v0[y], v0[z],
-                v1[x], v1[y], v1[z],
-                v2[x], v2[y], v2[z],
-
-                //Second triangle
-                v0[x], v0[y], v0[z],
-                v2[x], v2[y], v2[z],
-                v3[x], v3[y], v3[z],
-        };
-
-        float[] verticesWithUVs = {
-                //First triangle
-                v0[x], v0[y], v0[z], v0[u], v0[v],
-                v1[x], v1[y], v1[z], v1[u], v1[v],
-                v2[x], v2[y], v2[z], v2[u], v2[v],
-                //Second triangle
-                v0[x], v0[y], v0[z], v0[u], v0[v],
-                v2[x], v2[y], v2[z], v2[u], v2[v],
-                v3[x], v3[y], v3[z], v3[u], v3[v],
-        };
-
-        final float[] quadVertices = useTexCoords ? verticesWithUVs : verticesNoUVs;
-        AbstractVertexType vertexType = useTexCoords
-                ? new AbstractVertexType.TexturedVertexType()
-                : new AbstractVertexType.VertexType();
-
-        return new GLObject(vertexType, quadVertices);
-    }
-
     public GLObject getSelectedGlObject() {
         return mGlObjectList.get(mSelectedGLObject);
     }
 
-    public void nextGLObject() {
+    public GLObject nextGLObject() {
         mSelectedGLObject = mSelectedGLObject == mGlObjectList.size() - 1
                 ? 0
                 : mSelectedGLObject + 1;
+
+        return mGlObjectList.get(mSelectedGLObject);
     }
 
 
@@ -466,40 +432,68 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
      * OpenGL.
      */
     public static class GLObject {
+
         // Exposed directly for performance reasons
         public float[] modelMatrix = new float[16];
 
-        public final FloatBuffer vertexBuffer;
-        public final int vertexDataStride;
-        public final int positionOffset;
-        public final int uvOffset;
-        public final int nVertices;
-        public final int vertexPositionDimension;
-        public final int vertexTexturedCoordinateDimension;
+        public final FloatBuffer vBuffer;
+        public final int vDataStride;
+        public final int vCount;
 
-        public GLObject(AbstractVertexType abstractVertexType, final float[] vertexData) {
-            this.vertexBuffer = allocateNativeFloatBuffer(vertexData);
-            this.nVertices = vertexData.length / abstractVertexType.getDimensionPerVertex();
+        public final int vPosOffset;
+        public final int vPosDimension;
 
-            this.positionOffset = abstractVertexType.getPositionOffset();
-            this.uvOffset = abstractVertexType.getUVOffset();
-            this.vertexDataStride = abstractVertexType.getDataStrideInBytes();
+        public final int vUVOffset;
+        public final int vUVDimension;
 
-            this.vertexPositionDimension = uvOffset;
-            this.vertexTexturedCoordinateDimension = (vertexDataStride / 4) - uvOffset;
+        public final int vNormaDimension;
+        public final int vNormOffset;
+        public final String title;
+
+        public final int glRenderMode;
+
+        public GLObject(String title, VertexType vertexType, float[] vertexData) {
+            this(title, vertexType, vertexData, GL_TRIANGLES);
+
+        }
+
+        public GLObject(String title, VertexType vertexType, float[] vertexData, int glRenderMode) {
+            this.title = title;
+            /**
+             * prefix v means vertex.
+             */
+            this.vBuffer = allocateNativeFloatBuffer(vertexData);
+            this.vCount = vertexData.length / vertexType.getDimension();
+            this.vDataStride = vertexType.getDataStrideInBytes();
+
+            this.vPosOffset = vertexType.getPositionOffset();
+            this.vPosDimension = vertexType.getPositionCount();
+
+            this.vUVOffset = vertexType.getUVOffset();
+            this.vUVDimension = vertexType.getUVCount();
+
+            this.vNormOffset = vertexType.getNormalOffset();
+            this.vNormaDimension = vertexType.getNormalCount();
+
+            this.glRenderMode = glRenderMode;
 
             Matrix.setIdentityM(modelMatrix, 0);
         }
 
         // Animation callback
         public void update(final float dt) {
-            final float degreesPerSecond = 30;
+            final float degreesPerSecond = 60;
             Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt, 0, 0, 1);
-            Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt, 1, 0, 0);
+            Matrix.rotateM(modelMatrix, 0, degreesPerSecond * 1.5f * dt, 1, 0, 0);
+            Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt, 0, 1, 0);
         }
 
         public boolean hasTextureCoordinates() {
-            return vertexTexturedCoordinateDimension > 0;
+            return vUVDimension > 0;
+        }
+
+        public boolean hasNormals() {
+            return vNormaDimension > 0;
         }
     }
 
@@ -526,7 +520,13 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
 
         String readLine;
         while ((readLine = br.readLine()) != null) {
-            sb.append(readLine);
+            // Fix for enabling lazy style comments..
+            final int i = readLine.indexOf("//");
+            if(i != -1) {
+                sb.append(readLine.substring(0, i));
+            } else {
+                sb.append(readLine);
+            }
         }
 
         return sb.toString();
