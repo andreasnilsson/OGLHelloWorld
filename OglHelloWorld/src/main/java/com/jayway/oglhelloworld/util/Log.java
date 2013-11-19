@@ -22,4 +22,8 @@ public class Log {
     public void w(final String msg) {
         android.util.Log.w(tag, msg);
     }
+
+    public void e(final String msg, final Throwable throwable) {
+        android.util.Log.e(tag, msg, throwable);
+    }
 }

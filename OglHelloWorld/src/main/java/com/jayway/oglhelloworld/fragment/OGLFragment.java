@@ -12,9 +12,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.jayway.oglhelloworld.R;
-import com.jayway.oglhelloworld.ogl.GLES20Renderer;
+import com.jayway.oglhelloworld.renderer.GLES20Renderer;
 import com.jayway.oglhelloworld.util.Log;
 
 public class OGLFragment extends Fragment {
@@ -51,7 +52,7 @@ public class OGLFragment extends Fragment {
     private boolean detectOGL2Plus() {
         ActivityManager am = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo info = am.getDeviceConfigurationInfo();
-        return (info.reqGlEsVersion >= 0x20000);
+        return info != null && (info.reqGlEsVersion >= 0x20000);
     }
 
     private void setupGLSurfaceView(final GLSurfaceView glSurfaceView) {
@@ -86,7 +87,10 @@ public class OGLFragment extends Fragment {
                 return true;
             case R.id.action_next_object:
                 setAnimating(false);
-                mRenderer.nextGLObject();
+                GLES20Renderer.GLObject glObject = mRenderer.nextGLObject();
+
+                Toast.makeText(getActivity(), "Changed to: " + glObject.title, Toast.LENGTH_SHORT).show();
+
                 mGLSurfaceView.requestRender();
                 return true;
         }
