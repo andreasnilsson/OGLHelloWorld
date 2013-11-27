@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.jayway.oglhelloworld.fragment.NavigationDrawerFragment;
 import com.jayway.oglhelloworld.fragment.OGLFragment;
 
 public class MainActivity extends ActionBarActivity
@@ -43,12 +44,15 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        onNavigationDrawerItemSelected(0);
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         Fragment fragment;
         if(position == 0) {
+            System.out.println("Ogl fragment");
             fragment = mOGLFragment = OGLFragment.newInstance();
         } else {
             fragment = PlaceholderFragment.newInstance(position + 1);
@@ -65,12 +69,6 @@ public class MainActivity extends ActionBarActivity
             case 1:
                 mTitle = getString(R.string.title_section_ogl_fragment);
                 break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
         }
     }
 
@@ -85,7 +83,9 @@ public class MainActivity extends ActionBarActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         System.out.println(this + " on create options menu ");
-        if (mNavigationDrawerFragment.isDrawerOpen() || !mOGLFragment.isHidden()) {
+        boolean isOGLFragmentShown = mOGLFragment != null && !mOGLFragment.isHidden();
+
+        if (mNavigationDrawerFragment.isDrawerOpen() || isOGLFragmentShown) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
@@ -150,5 +150,4 @@ public class MainActivity extends ActionBarActivity
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
-
 }

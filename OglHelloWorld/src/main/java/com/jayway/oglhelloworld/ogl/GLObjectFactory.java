@@ -2,8 +2,6 @@ package com.jayway.oglhelloworld.ogl;
 
 import android.opengl.GLES20;
 
-import com.jayway.oglhelloworld.renderer.GLES20Renderer;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -12,10 +10,12 @@ import java.util.Arrays;
  * should be created. Thus, this implementation might not be suitable for some situations where
  * memory footprint or performance is crucial.
  * <p/>
- * Created by Andreas Nilsson on 2013-11-17.
+ *
+ * @author Andreas Nilsson
  */
 public class GLObjectFactory {
 
+    // Index in array for each coordinate
     private static final int X = 0;
     private static final int Y = 1;
     private static final int Z = 2;
@@ -23,7 +23,7 @@ public class GLObjectFactory {
     private static final int NY = 6;
     private static final int NZ = 7;
 
-    public static GLES20Renderer.GLObject createCube(float width, float height, float depth, boolean useUVs, boolean useNormals) {
+    public static GLObject createCube(float width, float height, float depth, boolean useUVs, boolean useNormals) {
         //    CUBE
         //    v6----- v5
         //   /|      /|
@@ -33,15 +33,15 @@ public class GLObjectFactory {
         //  |/      |/
         //  v2------v3
 
-        final float[] v0 = {width * 0.5f, height * 0.5f, depth * 0.5f, 1, 1, 1 / 3f, 1 / 3f, 1 / 3f}; //v0
-        final float[] v1 = {-width * 0.5f, height * 0.5f, depth * 0.5f, 0, 1, -1 / 3f, 1 / 3f, 1 / 3f}; //v1
-        final float[] v2 = {-width * 0.5f, -height * 0.5f, depth * 0.5f, 0, 0, -1 / 3f, -1 / 3f, 1 / 3f}; //v2
-        final float[] v3 = {width * 0.5f, -height * 0.5f, depth * 0.5f, 1, 0, 1 / 3f, -1 / 3f, 1 / 3f}; //v3
+        final float[] v0 = {width * 0.5f, height * 0.5f, depth * 0.5f, 1, 1, 1 / 3f, 1 / 3f, 1 / 3f};
+        final float[] v1 = {-width * 0.5f, height * 0.5f, depth * 0.5f, 0, 1, -1 / 3f, 1 / 3f, 1 / 3f};
+        final float[] v2 = {-width * 0.5f, -height * 0.5f, depth * 0.5f, 0, 0, -1 / 3f, -1 / 3f, 1 / 3f};
+        final float[] v3 = {width * 0.5f, -height * 0.5f, depth * 0.5f, 1, 0, 1 / 3f, -1 / 3f, 1 / 3f};
 
-        final float[] v4 = {width * 0.5f, -height * 0.5f, -depth * 0.5f, 1, 0, 1 / 3f, -1 / 3f, -1 / 3f}; //v4
-        final float[] v5 = {width * 0.5f, height * 0.5f, -depth * 0.5f, 1, 1, 1 / 3f, 1 / 3f, -1 / 3f}; //v5
-        final float[] v6 = {-width * 0.5f, height * 0.5f, -depth * 0.5f, 0, 1, -1 / 3f, 1 / 3f, -1 / 3f}; //v6
-        final float[] v7 = {-width * 0.5f, -height * 0.5f, -depth * 0.5f, 0, 0, -1 / 3f, -1 / 3f, -1 / 3f}; //v7
+        final float[] v4 = {width * 0.5f, -height * 0.5f, -depth * 0.5f, 1, 0, 1 / 3f, -1 / 3f, -1 / 3f};
+        final float[] v5 = {width * 0.5f, height * 0.5f, -depth * 0.5f, 1, 1, 1 / 3f, 1 / 3f, -1 / 3f};
+        final float[] v6 = {-width * 0.5f, height * 0.5f, -depth * 0.5f, 0, 1, -1 / 3f, 1 / 3f, -1 / 3f};
+        final float[] v7 = {-width * 0.5f, -height * 0.5f, -depth * 0.5f, 0, 0, -1 / 3f, -1 / 3f, -1 / 3f};
 
         float[] allVertices = {
                 // FRONT
@@ -105,10 +105,10 @@ public class GLObjectFactory {
                 v4[X], v4[Y], v4[Z], 0f, 1f, v4[NX], v4[NY], v4[NZ],
         };
 
-        return new GLES20Renderer.GLObject("Cube, soft shaded", getVertexType(useUVs, useNormals), allVertices);
+        return new GLObject("Cube, soft shaded", getVertexType(useUVs, useNormals), allVertices);
     }
 
-    public static GLES20Renderer.GLObject createCubeWithFlatNormals(float width, float height, float depth, boolean useUVs, boolean useNormals) {
+    public static GLObject createCubeWithFlatNormals(float width, float height, float depth, boolean useUVs, boolean useNormals) {
 
         //    CUBE
         //    v6----- v5
@@ -119,15 +119,15 @@ public class GLObjectFactory {
         //  |/      |/
         //  v2------v3
 
-        final float[] v0 = {width * 0.5f, height * 0.5f, depth * 0.5f}; //v0
-        final float[] v1 = {-width * 0.5f, height * 0.5f, depth * 0.5f}; //v1
-        final float[] v2 = {-width * 0.5f, -height * 0.5f, depth * 0.5f}; //v2
-        final float[] v3 = {width * 0.5f, -height * 0.5f, depth * 0.5f}; //v3
+        final float[] v0 = {width * 0.5f, height * 0.5f, depth * 0.5f};
+        final float[] v1 = {-width * 0.5f, height * 0.5f, depth * 0.5f};
+        final float[] v2 = {-width * 0.5f, -height * 0.5f, depth * 0.5f};
+        final float[] v3 = {width * 0.5f, -height * 0.5f, depth * 0.5f};
 
-        final float[] v4 = {width * 0.5f, -height * 0.5f, -depth * 0.5f}; //v4
-        final float[] v5 = {width * 0.5f, height * 0.5f, -depth * 0.5f}; //v5
-        final float[] v6 = {-width * 0.5f, height * 0.5f, -depth * 0.5f}; //v6
-        final float[] v7 = {-width * 0.5f, -height * 0.5f, -depth * 0.5f}; //v7
+        final float[] v4 = {width * 0.5f, -height * 0.5f, -depth * 0.5f};
+        final float[] v5 = {width * 0.5f, height * 0.5f, -depth * 0.5f};
+        final float[] v6 = {-width * 0.5f, height * 0.5f, -depth * 0.5f};
+        final float[] v7 = {-width * 0.5f, -height * 0.5f, -depth * 0.5f};
 
         float[] allVertices = {
                 // FRONT
@@ -191,10 +191,10 @@ public class GLObjectFactory {
                 v4[X], v4[Y], v4[Z], 0f, 1f, 0, 0, -1,
         };
 
-        return new GLES20Renderer.GLObject("Cube, flat shaded", getVertexType(useUVs, useNormals), allVertices);
+        return new GLObject("Cube, flat shaded", getVertexType(useUVs, useNormals), allVertices);
     }
 
-    public static GLES20Renderer.GLObject createSimpleTriangle(final boolean useUVs, final boolean useNormals) {
+    public static GLObject createSimpleTriangle(final boolean useUVs, final boolean useNormals) {
 
         // top
         float[] v0 = {
@@ -217,10 +217,10 @@ public class GLObjectFactory {
         final VertexType vertexType = getVertexType(useUVs, useNormals);
         final float[] allVertices = concatVertices(vertexType, v0, v1, v2);
 
-        return new GLES20Renderer.GLObject("Triangle", vertexType, allVertices);
+        return new GLObject("Triangle", vertexType, allVertices);
     }
 
-    public static GLES20Renderer.GLObject createSimpleQuad(final boolean useUVs, final boolean useNormals) {
+    public static GLObject createSimpleQuad(final boolean useUVs, final boolean useNormals) {
         // The four vertices of the quad
         final float v0[] = {-.5f, -.5f, 0, 0, 0, 0, 0, 1};
         final float v1[] = {.5f, -.5f, 0, 1, 0, 0, 0, 1};
@@ -230,7 +230,7 @@ public class GLObjectFactory {
         final VertexType vertexType = getVertexType(useUVs, useNormals);
         final float[] allVertices = concatVertices(vertexType, v0, v1, v2, v0, v2, v3);
 
-        return new GLES20Renderer.GLObject("Quad", vertexType, allVertices);
+        return new GLObject("Quad", vertexType, allVertices);
     }
 
     public static VertexType getVertexType(final boolean useUVs, final boolean useNormals) {
@@ -267,7 +267,7 @@ public class GLObjectFactory {
         return outArray;
     }
 
-    public static GLES20Renderer.GLObject createTorus(float R, float r, int N, int n, boolean useUVs, boolean useNormals) {
+    public static GLObject createTorus(float R, float r, int N, int n, boolean useUVs, boolean useNormals) {
         int maxn = 1000; // max precision
         n = Math.min(n, maxn - 1);
         N = Math.min(N, maxn - 1);
@@ -290,15 +290,11 @@ public class GLObjectFactory {
                 vertices.add((float) (r * Math.sin(v)));
 
                 // uv's
-                if(useUVs) {
-                    float tex_u  = (float) (v / (2 * Math.PI));
-                    float tex_v  = (float) ((w + tex_u)/(2 * Math.PI));
+                if (useUVs) {
+                    float tex_u = (float) (v / (2 * Math.PI));
+                    float tex_v = (float) ((w + tex_u) / (2 * Math.PI));
                     vertices.add(tex_u);
                     vertices.add(tex_v);
-
-                    if(tex_u > 1f || tex_u < 0f) {
-                        System.out.println("Andreas " + tex_u);
-                    }
                 }
 
                 if (useNormals) {
@@ -314,20 +310,16 @@ public class GLObjectFactory {
                 vertices.add((float) (r * Math.sin(v + dv)));
 
                 // uv's
-                if(useUVs) {
-                    float tex_u  = (float) (v / (2 * Math.PI));
-                    float tex_v  = (float) ((w + tex_u)/(2 * Math.PI));
+                if (useUVs) {
+                    float tex_u = (float) (v / (2 * Math.PI));
+                    float tex_v = (float) ((w + tex_u) / (2 * Math.PI));
                     vertices.add(tex_u);
                     vertices.add(tex_v);
-
-                    if(tex_u > 1f || tex_u < 0f) {
-                        System.out.println("Andreas " + tex_u);
-                    }
 
                 }
 
                 // normal
-                if(useNormals){
+                if (useNormals) {
                     vertices.add((float) ((R + rr * Math.cos(v + dv)) * Math.cos(w + dw) - (R + r * Math.cos(v + dv)) * Math.cos(w + dw)));
                     vertices.add((float) ((R + rr * Math.cos(v + dv)) * Math.sin(w + dw) - (R + r * Math.cos(v + dv)) * Math.sin(w + dw)));
                     vertices.add((float) (rr * Math.sin(v + dv) - r * Math.sin(v + dv)));
@@ -344,6 +336,6 @@ public class GLObjectFactory {
             vertexArray[i] = vertices.get(i);
         }
 
-        return new GLES20Renderer.GLObject("Torus", VertexType.VERTEX_TYPE_POS_UV_NORMAL, vertexArray, GLES20.GL_TRIANGLE_STRIP);
+        return new GLObject("Torus", VertexType.VERTEX_TYPE_POS_UV_NORMAL, vertexArray, GLES20.GL_TRIANGLE_STRIP);
     }
 }

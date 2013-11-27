@@ -4,7 +4,6 @@ import android.app.ActivityManager;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -12,18 +11,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.jayway.oglhelloworld.R;
-import com.jayway.oglhelloworld.renderer.GLES20Renderer;
 import com.jayway.oglhelloworld.util.Log;
+import com.jayway.oglhelloworld.view.GLES20SurfaceView;
 
 public class OGLFragment extends Fragment {
     private static final Log LOG = new Log(OGLFragment.class);
 
-    private GLSurfaceView mGLSurfaceView;
-    private GLES20Renderer mRenderer;
-    private boolean mIsAnimating = false;
+    private GLES20SurfaceView mGLSurfaceView;
     private MenuItem mToggleAnimationMenuItem;
 
     public static OGLFragment newInstance() {
@@ -31,17 +27,24 @@ public class OGLFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup root, Bundle savedInstanceState) {
         if (!detectOGL2Plus()) {
-            LOG.d("Could not detect OGL 2+");
+            final String message = "Could not detect OGL 2+";
+            LOG.e(message);
+
+            throw new RuntimeException(message);
         } else {
-            LOG.d("OGL 2+ is supported");
+            LOG.i("OGL 2+ is supported");
         }
 
         final View v = inflater.inflate(R.layout.fragment_ogl, root, false);
         if (v != null) {
-            mGLSurfaceView = (GLSurfaceView) v.findViewById(R.id.surfaceView);
-            setupGLSurfaceView(mGLSurfaceView);
+            mGLSurfaceView = (GLES20SurfaceView) v.findViewById(R.id.surfaceView);
         }
 
         setHasOptionsMenu(true);
@@ -55,20 +58,6 @@ public class OGLFragment extends Fragment {
         return info != null && (info.reqGlEsVersion >= 0x20000);
     }
 
-    private void setupGLSurfaceView(final GLSurfaceView glSurfaceView) {
-
-        // Setup gl surface
-        glSurfaceView.setEGLContextClientVersion(2);
-
-        // Set our renderer
-        mRenderer = new GLES20Renderer(getActivity());
-        glSurfaceView.setRenderer(mRenderer);
-        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-        // Stop the GL context from being destroyed when the the activity pauses.
-        glSurfaceView.getPreserveEGLContextOnPause();
-
-    }
 
     @Override
     public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
@@ -81,42 +70,15 @@ public class OGLFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        boolean wasItemSelected = false;
         switch (item.getItemId()) {
             case R.id.action_toggle_animation:
-                setAnimating(!mIsAnimating);
-                return true;
-            case R.id.action_next_object:
-                setAnimating(false);
-                GLES20Renderer.GLObject glObject = mRenderer.nextGLObject();
-
-                Toast.makeText(getActivity(), "Changed to: " + glObject.title, Toast.LENGTH_SHORT).show();
-
-                mGLSurfaceView.requestRender();
-                return true;
+                mGLSurfaceView.toggleAnimation();
+                wasItemSelected = true;
+                break;
         }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void setAnimating(final boolean isAnimating) {
-        mIsAnimating = isAnimating;
-        final int animationDelayInMilliseconds = 16;
-        final float animationDelayInSeconds = 0.016f;
-
-        final GLES20Renderer.GLObject glObject = mRenderer.getSelectedGlObject();
-        mGLSurfaceView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mIsAnimating) {
-                    glObject.update(animationDelayInSeconds);
-                    mGLSurfaceView.requestRender();
-                    mGLSurfaceView.postDelayed(this, animationDelayInMilliseconds);
-                }
-            }
-        }, animationDelayInMilliseconds);
-
-        if (mToggleAnimationMenuItem != null) {
-            mToggleAnimationMenuItem.setTitle("Animation: " + (mIsAnimating ? "On" : "Off"));
-        }
+        String animationTitle = "Animation: " + (mGLSurfaceView.isAnimating() ? "On" : "Off");
+        mToggleAnimationMenuItem.setTitle(animationTitle);
+        return wasItemSelected || super.onOptionsItemSelected(item);
     }
 }

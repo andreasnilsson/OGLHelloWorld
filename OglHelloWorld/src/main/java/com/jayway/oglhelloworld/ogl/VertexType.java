@@ -1,12 +1,17 @@
 package com.jayway.oglhelloworld.ogl;
 
 /**
- * Base vertex type which only supports a vertex format of the following style: v = {x, y, z}
+ * Defines the number of attributes and their order. This is needed since the format for meshes differ
+ * and in some cases you might not want texture coordinates for instance.
+ * <p/>
+ * This class is defined for 3D vertex types.
+ *
+ * @author Andreas Nilsson
  */
 public class VertexType {
     public static final int SIZE_OF_FLOAT = 4; // in bytes
     private final int mDimension;
-    private Element mNormal  = Element.NONE;
+    private Element mNormal = Element.NONE;
     private Element mTexCoord = Element.NONE;
     private Element mPosition = Element.NONE;
 

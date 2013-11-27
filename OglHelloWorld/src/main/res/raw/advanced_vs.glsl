@@ -17,7 +17,7 @@ void main()
 {
     vec3 pos = aPosition;
 
-    // Assumes the light is in the eyes position
+    // Light is located in the camera position
     light_dir = pos - uCamera;
     view_dir = -pos;
 
