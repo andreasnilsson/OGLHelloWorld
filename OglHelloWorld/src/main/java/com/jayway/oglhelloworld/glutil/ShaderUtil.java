@@ -47,7 +47,6 @@ public class ShaderUtil {
      */
     public static int createAndLinkShaderProgram(String vertexSource, String fragmentSource) {
         int program = CREATE_PROGRAM_FAILED;
-
         int vertexShader = createShader(GL_VERTEX_SHADER, vertexSource);
         int fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentSource);
 

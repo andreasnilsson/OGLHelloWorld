@@ -20,12 +20,8 @@ public class GLObjectDB extends Observable {
 
     public GLObjectDB() {
         // create all objects..
-        mAllObjects.add(GLObjectFactory.createSimpleTriangle(USE_UV, USE_NORMALs));
-        mAllObjects.add(GLObjectFactory.createSimpleQuad(USE_UV, USE_NORMALs));
-        mAllObjects.add(GLObjectFactory.createCube(1, 1, 1, USE_UV, USE_NORMALs));
-        mAllObjects.add(GLObjectFactory.createCubeWithFlatNormals(1, 1, 1, USE_UV, USE_NORMALs));
-        mAllObjects.add(GLObjectFactory.createTorus(0.7f, 0.4f, 40, 40, USE_UV, USE_NORMALs));
-        // TODO add more objects here
+        mAllObjects.add(GLObjectFactory.createTriangle());
+        // TODO Here you can add more objects if you want to
     }
 
     public static GLObjectDB getInstance() {
