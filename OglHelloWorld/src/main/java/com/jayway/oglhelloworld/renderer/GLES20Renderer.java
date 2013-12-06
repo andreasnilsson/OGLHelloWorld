@@ -153,11 +153,8 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
             // Load textures
             mTextureId = loadTexture(R.drawable.jayway);
 
-            // Setup view matrix
-            Matrix.setLookAtM(mViewMatrix, 0,
-                    eye[0], eye[1], eye[2],
-                    center[0], center[1], center[2],
-                    up[0], up[1], up[2]);
+            // TODO Setup view matrix
+            Matrix.setIdentityM(mViewMatrix, 0);
 
         } else {
             LOG.w("Shader compilation failed");
@@ -168,9 +165,8 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 unused, int width, int height) {
         glViewport(0, 0, width, height);
 
-        // Setup projection
-        final float aspect = (float) width / height;
-        Matrix.perspectiveM(mProjectionMatrix, 0, FIELD_OF_VIEW, aspect, NEAR_PLANE, FAR_PLANE);
+        // TODO setup the projection matrix
+        Matrix.setIdentityM(mProjectionMatrix, 0);
     }
 
     @Override
