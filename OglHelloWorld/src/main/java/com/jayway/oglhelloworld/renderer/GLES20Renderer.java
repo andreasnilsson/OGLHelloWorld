@@ -128,23 +128,6 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     private static final String A_TEXTURE_COORDINATE = "aUV"; // also known as UV-coordinate
     private static final String A_NORMAL = "aNormal";
 
-    private final String mVertexShader =
-                      "attribute vec3 " + A_POSITION + ";"
-                    + "attribute vec2 " + A_TEXTURE_COORDINATE + ";"
-                    + "uniform mat4 " + U_MVP_MATRIX + ";"
-                    + "varying vec2 uv;"
-                    + "void main() {"
-                    + "  uv = " + A_TEXTURE_COORDINATE + ";"
-                    + "  gl_Position = " + U_MVP_MATRIX + "* vec4(" + A_POSITION + ",1.0);"
-                    + "}";
-
-    private final String mFragmentShader =
-                      "precision mediump float;"
-                    + "uniform sampler2D " + U_TEXTURE_01 + ";"
-                    + "varying vec2 uv;"
-                    + "void main() {"
-                    + "  gl_FragColor = texture2D(" + U_TEXTURE_01 + ", vec2(uv.x, 1.0-uv.y));"
-                    + "}";
     public GLES20Renderer(Context context) {
         mContext = context;
 
@@ -162,19 +145,10 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         // Initiate objects
         createGLObjects(USE_TEXTURE_COORDINATES, USE_NORMALS);
 
-        if (USE_NORMALS) {
-            try {
-                final String vs = loadShaderSourceFromRaw(R.raw.advanced_vs);
-                final String fs = loadShaderSourceFromRaw(R.raw.advanved_fs);
+        final String vsSource = loadShaderSourceFromRaw(R.raw.simple_fs);
+        final String fsSource = loadShaderSourceFromRaw(R.raw.simple_fs);
 
-                mShaderProgram = createProgram(vs, fs);
-            } catch (IOException e) {
-                LOG.e("Failed loading shaders form raw", e);
-
-            }
-        } else {
-            mShaderProgram = createProgram(mVertexShader, mFragmentShader);
-        }
+        mShaderProgram = createProgram(vsSource, fsSource);
 
         if (mShaderProgram != PROGRAM_COMPILED_WITH_ERROR) {
             bindUniformsAndAttributes(mShaderProgram, USE_TEXTURE_COORDINATES, USE_NORMALS);
@@ -513,21 +487,23 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         return buffer;
     }
 
-    private String loadShaderSourceFromRaw(int id) throws IOException {
+    private String loadShaderSourceFromRaw(int id) {
         final InputStream is = mContext.getResources().openRawResource(id);
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
 
         String readLine;
-        while ((readLine = br.readLine()) != null) {
-            // Fix for enabling lazy style comments..
-            final int i = readLine.indexOf("//");
-            if(i != -1) {
-                sb.append(readLine.substring(0, i));
-            } else {
-                sb.append(readLine);
+        try {
+            while ((readLine = br.readLine()) != null) {
+                // Fix for enabling lazy style comments..
+                final int i = readLine.indexOf("//");
+                if(i != -1) {
+                    sb.append(readLine.substring(0, i));
+                } else {
+                    sb.append(readLine);
+                }
             }
-        }
+        } catch (IOException ignored) {}
 
         return sb.toString();
     }
