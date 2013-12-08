@@ -2,9 +2,7 @@ package com.jayway.oglhelloworld.renderer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
 import com.jayway.oglhelloworld.R;
@@ -21,14 +19,8 @@ import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DEPTH_TEST;
 import static android.opengl.GLES20.GL_FLOAT;
-import static android.opengl.GLES20.GL_LINEAR;
-import static android.opengl.GLES20.GL_REPEAT;
 import static android.opengl.GLES20.GL_TEXTURE0;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
-import static android.opengl.GLES20.GL_TEXTURE_MAG_FILTER;
-import static android.opengl.GLES20.GL_TEXTURE_MIN_FILTER;
-import static android.opengl.GLES20.GL_TEXTURE_WRAP_S;
-import static android.opengl.GLES20.GL_TEXTURE_WRAP_T;
 import static android.opengl.GLES20.glActiveTexture;
 import static android.opengl.GLES20.glBindTexture;
 import static android.opengl.GLES20.glClear;
@@ -37,10 +29,8 @@ import static android.opengl.GLES20.glCullFace;
 import static android.opengl.GLES20.glDrawArrays;
 import static android.opengl.GLES20.glEnable;
 import static android.opengl.GLES20.glEnableVertexAttribArray;
-import static android.opengl.GLES20.glGenTextures;
 import static android.opengl.GLES20.glGetAttribLocation;
 import static android.opengl.GLES20.glGetUniformLocation;
-import static android.opengl.GLES20.glTexParameterf;
 import static android.opengl.GLES20.glUniform3fv;
 import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
@@ -63,21 +53,21 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     // Constants
     public static final float[] CLEAR_COLOR = {0.5f, 0.5f, 0.5f, 1f};
     public static final boolean USE_TEXTURE_COORDINATES = true;
-    public static final boolean USE_NORMALS             = true;
+    public static final boolean USE_NORMALS = true;
 
     // Camera/View related
-    private static final float NEAR_PLANE    = .1f;
-    private static final float FAR_PLANE     = 10f;
+    private static final float NEAR_PLANE = .1f;
+    private static final float FAR_PLANE = 10f;
     private static final float FIELD_OF_VIEW = 45;
 
-    private final float[] up     = {0f, 1f, 0f};
-    private final float[] eye    = {0f, 0f, 5f};
+    private final float[] up = {0f, 1f, 0f};
+    private final float[] eye = {0f, 0f, 5f};
     private final float[] center = {0f, 0f, 0f};
 
     // Matrices
-    private float[] mMVPMatrix        = new float[16];
+    private float[] mMVPMatrix = new float[16];
     private float[] mProjectionMatrix = new float[16];
-    private float[] mViewMatrix       = new float[16];
+    private float[] mViewMatrix = new float[16];
 
     // Shader program
     private int mShaderProgram = ShaderUtil.CREATE_PROGRAM_FAILED;
@@ -102,7 +92,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
     private static final String A_NORMAL = "aNormal";
 
     private final String mVertexShader =
-                      "attribute vec3 " + A_POSITION + ";"
+            "attribute vec3 " + A_POSITION + ";"
                     + "attribute vec2 " + A_TEXTURE_COORDINATE + ";"
                     + "uniform mat4 " + U_MVP_MATRIX + ";"
                     + "varying vec2 uv;"
@@ -112,7 +102,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
                     + "}";
 
     private final String mFragmentShader =
-                      "precision highp float;"
+            "precision highp float;"
                     + "uniform sampler2D " + U_TEXTURE_01 + ";"
                     + "varying vec2 uv;"
                     + "void main() {"
@@ -162,6 +152,33 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         } else {
             LOG.w("Shader compilation failed");
         }
+    }
+
+    private int loadTexture(int resId) {
+        //TODO  Load a bitmap that you want to use a texture.
+        // Tip: you could use the resource id in the parameter
+        final Bitmap bitmap = null;
+
+        // Generate texture id
+        //TODO generate at texture id with opengl
+        int textureId = -1;
+
+        // verify generated texture id is not -1
+
+        if (textureId == -1) {
+            LOG.e("Failed generating texture id");
+        }
+
+        //TODO  Bind the texture
+
+        //TODO  Setup texture parameters
+
+        //TODO Upload texture to OpenGL
+
+        // Recycle bitmap from memory
+        bitmap.recycle();
+
+        return textureId;
     }
 
     @Override
@@ -287,44 +304,6 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
                 }
             }
         }
-    }
-
-    /**
-     * Loads a drawable resource as texture into the graphics memory.
-     *
-     * @param resId The drawable resource id.
-     * @return The texture handle
-     */
-    private int loadTexture(int resId) {
-        // Normally you want to load resources in the background and show something else mean while
-        // But since we only have one small texture it does not create
-        final Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), resId);
-
-        // Generate texture id
-        int[] textures = {-1};
-        glGenTextures(textures.length, textures, 0);
-
-        // verify generated texture id is not -1
-
-        if (textures[0] == -1) {
-            LOG.e("Failed generating texture id");
-        }
-
-        glBindTexture(GL_TEXTURE_2D, textures[0]);
-
-        // Setup texture parameters
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Upload texture to DemoOpenGL
-        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
-
-        // Bitmap is uploaded to the graphics memory so we can recycle it from memory.
-        bitmap.recycle();
-
-        return textures[0];
     }
 
     /**
