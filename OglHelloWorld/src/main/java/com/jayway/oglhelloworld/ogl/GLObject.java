@@ -140,10 +140,8 @@ public class GLObject {
      * @param dt The time since last update.
      */
     public void update(final float dt) {
-        final float degreesPerSecond = 60;
-        Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt, 1, 0, 0);
-        Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt * 2f, 0, 1, 0);
-        Matrix.rotateM(modelMatrix, 0, degreesPerSecond * dt * 2f, 0, 0, 1);
+        // TODO play with the model matrix here
+        // Alternatively set the rotation and call updateModelMatrix
     }
 
     /**
