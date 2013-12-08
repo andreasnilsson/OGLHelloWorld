@@ -93,33 +93,9 @@ public class GLES20SurfaceView extends GLSurfaceView {
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        // MotionEvent reports input details from the touch screen
-        // and other input controls. In this case, you are only
-        // interested in events where the touch position changed.
+        final GLObject glObject = GLObjectDB.getInstance().getSelectedObject();
 
-        float x = e.getX();
-        float y = e.getY();
-
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_MOVE:
-
-                float dx = x - mPreviousX;
-                float dy = y - mPreviousY;
-
-                final GLObject glObject = GLObjectDB.getInstance().getSelectedObject();
-
-                float newRotationX = glObject.getRotationX() + dx * TOUCH_SCALE_FACTOR;
-                float newRotationY = glObject.getRotationY() + dy * TOUCH_SCALE_FACTOR;
-
-                glObject.setRotationX(newRotationX);
-                glObject.setRotationY(newRotationY);
-
-                requestRender();
-        }
-
-        mPreviousX = x;
-        mPreviousY = y;
-
+        requestRender();
         return true;
     }
 
