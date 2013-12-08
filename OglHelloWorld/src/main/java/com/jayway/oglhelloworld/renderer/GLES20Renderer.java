@@ -135,15 +135,9 @@ public class GLES20Renderer implements GLSurfaceView.Renderer {
         glCullFace(GL_BACK); // Only draw triangles that are facing us.
 
         // Compile shaders
-        String vs;
-        String fs;
-        if (USE_NORMALS) {
-            vs = ShaderUtil.loadShaderSourceFromRaw(mContext, R.raw.advanced_vs);
-            fs = ShaderUtil.loadShaderSourceFromRaw(mContext, R.raw.advanved_fs);
-        } else {
-            vs = mVertexShader;
-            fs = mFragmentShader;
-        }
+        String vs = ShaderUtil.loadShaderSourceFromRaw(mContext, R.raw.advanced_vs);
+        String fs = ShaderUtil.loadShaderSourceFromRaw(mContext, R.raw.advanved_fs);
+
         mShaderProgram = ShaderUtil.createAndLinkShaderProgram(vs, fs);
 
         if (mShaderProgram != ShaderUtil.CREATE_PROGRAM_FAILED) {

@@ -17,11 +17,13 @@ void main()
 {
     vec3 pos = aPosition;
 
-    // Light is located in the camera position
-    light_dir = pos - uCamera;
-    view_dir = -pos;
+    // calculate the light direction
+    light_dir = vec3();
 
-    // eye = pos - uCamera;
+    // calculate the view direction
+    view_dir = vec3();
+
+    // interpolating uv's
     uv = aUV;
 
     //No need to normalize here since we need to do it in the fs
